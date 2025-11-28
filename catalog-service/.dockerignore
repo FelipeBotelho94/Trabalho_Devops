@@ -1,0 +1,7 @@
+# Garantir que o docker tenha apenas o necessário
+__pycache__
+venv
+.env
+*.db
+.git
+.gitignore

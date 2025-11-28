@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # 1. O Banco de Dados (PostgreSQL)
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: senha_secreta_123
+      POSTGRES_DB: catalog_db
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persistência: Salva os dados num volume do Docker [cite: 204]
+      - pgdata:/var/lib/postgresql/data
+
+  # 2. A Sua Aplicação (Catalog Service)
+  catalog:
+    build: 
+      context: ./catalog-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db  # Espera o banco iniciar antes de tentar subir
+    environment:
+      # 12-FACTOR:
+      # Sobrescrevemos a config local (SQLite) por essa de produção (Postgres)
+      - DATABASE_URL=postgresql://admin:senha_secreta_123@db:5432/catalog_db
+    volumes:
+      - ./catalog-service:/app
+    restart: unless-stopped
+
+volumes:
+  pgdata:
