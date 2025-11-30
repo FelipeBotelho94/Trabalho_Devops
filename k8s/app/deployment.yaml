@@ -15,19 +15,40 @@ spec:
       containers:
         - name: catalog-api
           image: catalog-service:latest
-          imagePullPolicy: Never # IMPORTANTE: Diz pro K8s usar a imagem local que carregamos, não tentar baixar da internet
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
-          # Aqui injetamos as variáveis que criamos antes (ConfigMap e Secret)
           envFrom:
             - configMapRef:
                 name: catalog-config
             - secretRef:
                 name: catalog-secrets
-          # Checagem básica de saúde 
+          
+          # Resources (Obrigatório para HPA) 
+          # Requests: O mínimo garantido para o pod subir
+          # Limits: O teto máximo. Se passar disso, o K8s mata o pod
+          resources:
+            requests:
+              cpu: "100m"   # 10% de um núcleo (mili-cores)
+              memory: "64Mi"
+            limits:
+              cpu: "250m"   # 25% de um núcleo
+              memory: "128Mi"
+
+          # Probes
+          # Liveness: "Você travou?" Se falhar, o K8s reinicia o pod
           livenessProbe:
+            httpGet:
+              path: /  # Nossa rota de saúde
+              port: 8000
+            initialDelaySeconds: 15 # Espera 15s antes de começar a checar
+            periodSeconds: 20       # Checa a cada 20s
+
+          # Readiness: "Pode receber cliente?" Se falhar, o K8s para de mandar tráfego
+          # Útil quando o app sobe mas o banco ainda tá conectando
+          readinessProbe:
             httpGet:
               path: /
               port: 8000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
