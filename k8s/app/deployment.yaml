@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-deploy
+spec:
+  replicas: 1 # Começamos com 1 pod 
+  selector:
+    matchLabels:
+      app: catalog-api
+  template:
+    metadata:
+      labels:
+        app: catalog-api
+    spec:
+      containers:
+        - name: catalog-api
+          image: catalog-service:latest
+          imagePullPolicy: Never # IMPORTANTE: Diz pro K8s usar a imagem local que carregamos, não tentar baixar da internet
+          ports:
+            - containerPort: 8000
+          # Aqui injetamos as variáveis que criamos antes (ConfigMap e Secret)
+          envFrom:
+            - configMapRef:
+                name: catalog-config
+            - secretRef:
+                name: catalog-secrets
+          # Checagem básica de saúde 
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10

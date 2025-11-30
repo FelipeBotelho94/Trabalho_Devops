@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-svc
+spec:
+  type: ClusterIP # Endereço interno apenas (o Ingress vai expor pra fora)
+  selector:
+    app: catalog-api
+  ports:
+    - port: 80        # Porta do Serviço (interna do cluster)
+      targetPort: 8000 # Porta do Container (onde o Uvicorn roda)

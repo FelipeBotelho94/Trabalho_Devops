@@ -1,0 +1,49 @@
+# 1. SERVICE (O endereço fixo do banco)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-svc # O código vai procurar por esse nome!
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: postgres-db # Liga esse serviço aos pods com essa etiqueta
+  clusterIP: None # Headless Service (bom para bancos simples)
+
+---
+# 2. DEPLOYMENT (O container do banco)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-db
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15 # Mesma imagem do Docker Compose
+          ports:
+            - containerPort: 5432
+          # Configurações de ambiente (Simplificado para DEV)
+          env:
+            - name: POSTGRES_USER
+              value: "admin"
+            - name: POSTGRES_PASSWORD
+              value: "senha_secreta_123"
+            - name: POSTGRES_DB
+              value: "catalog_db"
+          # Persistência (Volume temporário por enquanto)
+          # No Entregável E5 a gente melhora com PVC (PersistentVolumeClaim)
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata
+          emptyDir: {}

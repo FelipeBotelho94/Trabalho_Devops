@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: catalog-ingress
+  annotations:
+    # Isso diz para o NGINX reescrever a URL se necessário (padrão do controller)
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: catalog.local  # O endereço "fake" que vamos usar no navegador
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: catalog-svc # Nome do Service que criamos antes
+                port:
+                  number: 80      # Porta do Service
