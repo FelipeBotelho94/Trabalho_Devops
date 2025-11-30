@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Importa a Base e seus Models
 from database.connection import Base, SQLALCHEMY_DATABASE_URL
-from database.models import ProductModel
+from database.models import ProductModel  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

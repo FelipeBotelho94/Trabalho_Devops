@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 # Buscando da pasta database
-from database.connection import engine, get_db, Base
+from database.connection import get_db
 from database.models import ProductModel
 
 # CONTRATO DA API (Schemas - Pydantic)
@@ -33,3 +33,8 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 @app.get("/products/", response_model=list[ProductResponse]) 
 def read_products(db: Session = Depends(get_db)):
     return db.query(ProductModel).all()
+
+# Rota Health Check
+@app.get("/")
+def read_root():
+    return {"message": "Catalog Service UP"}
