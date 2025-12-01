@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: catalog-api
-          image: catalog-service:latest
-          imagePullPolicy: Never
+          image: arruda94/catalog-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:
