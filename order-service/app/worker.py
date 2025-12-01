@@ -6,9 +6,14 @@ QUEUE_NAME = "order_queue"
 print("Worker aguardando pedidos...")
 
 while True:
-    item = redis_client.brpop(QUEUE_NAME)
+    # Usa timeout de 5 segundos para não bloquear indefinidamente
+    item = redis_client.brpop(QUEUE_NAME, timeout=5)
     if item:
         _, value = item
         order = json.loads(value)
         print(f"[WORKER] Processando pedido: {order}")
-        time.sleep(2)
+        # Aumenta o tempo de processamento para permitir visualização na fila
+        time.sleep(30)  # Processa por 10 segundos para permitir visualização
+    else:
+        # Se não houver pedidos, aguarda um pouco antes de tentar novamente
+        time.sleep(1)

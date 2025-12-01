@@ -32,5 +32,36 @@ services:
       - ./catalog-service:/app
     restart: unless-stopped
 
+  # 3. Redis (para Order Service)
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # 4. Order Service
+  order-service:
+    build: 
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8002:8002"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # 5. Order Worker
+  worker:
+    build: 
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-worker
+    command: ["python", "app/worker.py"]
+    depends_on:
+      - redis
+    restart: unless-stopped
+
 volumes:
   pgdata:
