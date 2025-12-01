@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from app import app 
 from database.connection import Base, engine
+from database.models import ProductModel
 
 # Antes de testar, cria as tabelas no banco (SQLite) desse ambiente
 Base.metadata.create_all(bind=engine)
