@@ -1,0 +1,36 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'catalog-service'
+    environment: 'development'
+
+# Configuração de alertas (opcional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: []
+
+# Regras de alerta (opcional)
+# rule_files:
+#   - "alert_rules.yml"
+
+# Configuração de targets para scraping
+scrape_configs:
+  # Métricas da aplicação Catalog Service
+  - job_name: 'catalog-service'
+    static_configs:
+      - targets: ['catalog:8000']
+        labels:
+          service: 'catalog-service'
+          job: 'catalog-api'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Métricas do Prometheus (auto-monitoramento)
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
