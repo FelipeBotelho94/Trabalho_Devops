@@ -1,0 +1,73 @@
+name: CI/CD Catalog Service
+
+# Quando esse pipeline roda?
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'catalog-service/**' # Só roda se mexer na pasta do serviço
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'catalog-service/**'
+
+jobs:
+  # ====================================================
+  # JOB 1: QUALIDADE (Testes e Lint)
+  # ====================================================
+  quality:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        # Entramos na pasta para rodar o pip
+        working-directory: ./catalog-service
+        run: |
+          pip install -r requirements.txt
+          pip install pytest ruff httpx
+
+      - name: Rodar Lint (Ruff)
+        working-directory: ./catalog-service
+        run: ruff check .
+
+      - name: Rodar Testes (Pytest)
+        working-directory: ./catalog-service
+        run: python -m pytest
+
+  # ====================================================
+  # JOB 2: BUILD & PUSH (Docker Hub)
+  # Só roda se o Job 1 passar (needs: quality)
+  # ====================================================
+  build-push:
+    name: Docker Build & Push
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build e Push da Imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: ./catalog-service  # Pasta onde está o Dockerfile
+          file: ./catalog-service/Dockerfile
+          push: true
+          # Nome da imagem: seu-usuario/catalog-service:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/catalog-service:latest, ${{ secrets.DOCKER_USERNAME }}/catalog-service:${{ github.sha }}
