@@ -5,7 +5,7 @@
 
 # Estágio 1: BUILDER (Preparação)
 # Usamos a imagem Python para baixar e preparar as bibliotecas
-FROM python:3.11.9-slim as builder
+FROM python:3.11.9-slim AS builder
 
 WORKDIR /app
 
