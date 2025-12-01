@@ -38,3 +38,5 @@ def read_products(db: Session = Depends(get_db)):
 @app.get("/")
 def read_root():
     return {"message": "Catalog Service UP"}
+
+# Forçando o deploy para testar o Linux
