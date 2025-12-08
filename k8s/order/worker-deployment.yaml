@@ -14,10 +14,12 @@ spec:
     spec:
       containers:
         - name: order-worker
-          # Mesma imagem da API
-          image: arruda94/order-service:latest
+          image: arruda94/order-service:latest 
           imagePullPolicy: Always
           env:
             - name: REDIS_HOST
               value: "redis"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          # -----------------------------------------
           command: ["python", "-m", "app.worker"]
