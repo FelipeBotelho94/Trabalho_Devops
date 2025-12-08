@@ -12,7 +12,6 @@ on:
 
 jobs:
   # --- JOB 1: DOCKER HUB (Build & Push) ---
-  # Como não temos testes no order (ainda), vamos direto pro Build
   build-push:
     name: Build & Push Order
     runs-on: ubuntu-latest
@@ -28,10 +27,9 @@ jobs:
       
       - uses: docker/build-push-action@v6
         with:
-          context: ./order-service  # <--- Pasta do Order
+          context: ./order-service
           file: ./order-service/Dockerfile
           push: true
-          # <--- ATENÇÃO: Nome da imagem do Order
           tags: ${{ secrets.DOCKER_USERNAME }}/order-service:latest
 
   # --- JOB 2: DEPLOY NA AZURE ---
@@ -46,14 +44,15 @@ jobs:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USER }}
           key: ${{ secrets.AZURE_KEY }}
+          # O script começa AQUI. Tudo abaixo são comandos LINUX.
           script: |
             # 1. Atualiza o código na VM
             cd TRABALHO_DEVOPS
             git pull origin main
 
-            # 2. Aplica a pasta do Order (Sobe Redis, API e Worker)
+            # 2. Aplica a pasta do Order
             kubectl apply -f k8s/order/
 
-            # 3. Força a atualização das imagens
+            # 3. Força a atualização dos pods
             kubectl rollout restart deployment/order-api
             kubectl rollout restart deployment/order-worker
