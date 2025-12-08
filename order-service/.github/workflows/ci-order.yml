@@ -1,0 +1,59 @@
+name: CI/CD Order Service
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      # SÓ roda se mexer na pasta do pedido ou nos k8s do pedido
+      - 'order-service/**'
+      - 'k8s/order/**'
+      - '.github/workflows/ci-order.yml'
+
+jobs:
+  # --- JOB 1: DOCKER HUB (Build & Push) ---
+  # Como não temos testes no order (ainda), vamos direto pro Build
+  build-push:
+    name: Build & Push Order
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - uses: docker/setup-buildx-action@v3
+      
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./order-service  # <--- Pasta do Order
+          file: ./order-service/Dockerfile
+          push: true
+          # <--- ATENÇÃO: Nome da imagem do Order
+          tags: ${{ secrets.DOCKER_USERNAME }}/order-service:latest
+
+  # --- JOB 2: DEPLOY NA AZURE ---
+  deploy:
+    name: Deploy Order to Azure
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_KEY }}
+          script: |
+            # 1. Atualiza o código na VM
+            cd TRABALHO_DEVOPS
+            git pull origin main
+
+            # 2. Aplica a pasta do Order (Sobe Redis, API e Worker)
+            kubectl apply -f k8s/order/
+
+            # 3. Força a atualização das imagens
+            kubectl rollout restart deployment/order-api
+            kubectl rollout restart deployment/order-worker
