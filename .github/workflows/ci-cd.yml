@@ -75,3 +75,34 @@ jobs:
           push: true
           # Nome da imagem: seu-usuario/catalog-service:latest
           tags: ${{ secrets.DOCKER_USERNAME }}/catalog-service:latest, ${{ secrets.DOCKER_USERNAME }}/catalog-service:${{ github.sha }}
+
+# --- JOB 3: DEPLOY NA AZURE (A PARTE QUE FALTOU) ---
+  deploy:
+    name: Deploy to Azure
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_KEY }}
+          script: |
+            # 1. Entra na pasta (ou clona se não existir)
+            if [ ! -d "TRABALHO_DEVOPS" ]; then
+              git clone https://github.com/${{ github.repository }}.git TRABALHO_DEVOPS
+            fi
+            cd TRABALHO_DEVOPS
+            git pull origin main
+
+            # 2. Garante que o Minikube está pronto para receber
+            # (O minikube start já foi dado manualmente, aqui só garantimos o contexto)
+            minikube addons enable ingress
+            
+            # 3. Aplica os YAMLs
+            kubectl apply -f k8s/database/postgres.yaml
+            kubectl apply -f k8s/app/
+
+            # 4. Força o Kubernetes a baixar a imagem nova que acabamos de subir
+            kubectl rollout restart deployment/catalog-deploy
