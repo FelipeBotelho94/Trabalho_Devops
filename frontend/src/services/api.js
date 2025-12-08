@@ -1,22 +1,26 @@
 import axios from 'axios';
 
+// Em vez de apontar para localhost:8000, apontamos para o "caminho relativo"
+// O Ingress (na nuvem) ou o Vite (local) vão redirecionar isso para o lugar certo.
+
 const catalogAPI = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: '/api/catalog', // Era http://localhost:8000
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 const orderAPI = axios.create({
-  baseURL: 'http://localhost:8002',
+  baseURL: '/api/order',   // Era http://localhost:8002
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Catalog Service APIs
+// O resto continua igualzinho...
 export const catalogService = {
   getProducts: async () => {
+    // Agora o navegador vai chamar: meudominio.com/api/catalog/products/
     const response = await catalogAPI.get('/products/');
     return response.data;
   },
@@ -32,7 +36,6 @@ export const catalogService = {
   },
 };
 
-// Order Service APIs
 export const orderService = {
   createOrder: async (order) => {
     const response = await orderAPI.post('/orders', order);
@@ -49,4 +52,3 @@ export const orderService = {
     return response.data;
   },
 };
-

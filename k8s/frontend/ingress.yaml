@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+  annotations:
+    # Isso é CRUCIAL: Remove o prefixo "/api/catalog" antes de mandar pro backend
+    # Porque seu backend Python espera "/products" e não "/api/catalog/products"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          # Rota do Catálogo (vinda do vite.config.js proxy)
+          - path: /api/catalog(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: catalog-svc
+                port:
+                  number: 80
+
+          # Rota de Pedidos (vinda do vite.config.js proxy)
+          - path: /api/order(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: order-svc
+                port:
+                  number: 80
+
+          # Rota do Frontend (React) - Pega todo o resto
+          - path: /()(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80
